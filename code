@@ -1,0 +1,61 @@
+import pandas
+from pandas.tools.plotting import scatter_matrix
+import matplotlib.pyplot as plt
+from sklearn import model_selection
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+location="/home/shivani/Downloads/mushroom_train.csv"
+mushrooms=pandas.read_csv(location)
+from sklearn.preprocessing import LabelEncoder
+
+for c in mushrooms.columns:
+    mushrooms[c]=mushrooms[c].fillna(-1)
+    if mushrooms[c].dtype == 'object':
+        lbl = LabelEncoder()
+        mushrooms[c] = lbl.fit_transform(list(mushrooms[c].values))
+    print(mushrooms[c])        
+print(mushrooms.describe().T)
+new_col=mushrooms.groupby('class').mean()
+print(new_col.head().T)
+scoring='accuracy'
+array=mushrooms.values
+x=array[:,1:]
+y=array[:,0]
+seed=7
+models=[]
+models.append(('LR', LogisticRegression()))
+models.append(('KNN', KNeighborsClassifier()))
+models.append(('CART', DecisionTreeClassifier()))
+models.append(('NB', GaussianNB()))
+models.append(('SVM', SVC()))
+
+# evaluate each model in turn
+results = []
+names = []
+for name, model in models:
+	kfold = model_selection.KFold(n_splits=10, random_state=seed)
+	cv_results = model_selection.cross_val_score(model, x, y, cv=kfold, scoring=scoring)
+	results.append(cv_results)
+	names.append(name)
+    
+	print("%s: %f (%f)" % (name, cv_results.mean(), cv_results.std()))
+  cart = DecisionTreeClassifier()
+cart.fit(x, y)
+loc="/home/shivani/Downloads/mushroom_test.csv"
+prediction=pandas.read_csv(loc)
+
+for c in prediction.columns:
+    prediction[c]=prediction[c].fillna(-1)
+    if prediction[c].dtype == 'object':
+        lbl = LabelEncoder()
+        prediction[c] = lbl.fit_transform(list(prediction[c].values))
+x_prediction=prediction.values
+y_prediction= cart.predict(x_prediction)
+y_prediction
